@@ -14,10 +14,6 @@ public class NottranBackend implements Backend{
 
         CodeGenerator gen = new CodeGenerator();
         TamInstruction.InstructionList instrs = gen.generateProgram(prog);
-
-        System.out.println("TAM Assembly:");
-        System.out.println(instrs);
-
         return instrs.toByteArray();
     }
 }

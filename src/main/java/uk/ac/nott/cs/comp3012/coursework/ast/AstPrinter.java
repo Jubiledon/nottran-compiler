@@ -105,7 +105,7 @@ public class AstPrinter {
     }
 
     private void printRelOp(RelOp r) {
-        pad(); System.out.println("RelOp " + r.op());
+        pad(); System.out.println("RelOp " + r.opSymbol());
         indent += 2;
         print(r.left());
         print(r.right());

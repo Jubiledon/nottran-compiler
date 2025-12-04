@@ -2,8 +2,8 @@ package uk.ac.nott.cs.comp3012.coursework.backend.codegen;
 
 import uk.ac.nott.cs.comp3012.coursework.ast.*;
 import uk.ac.nott.cs.comp3012.coursework.backend.tam.TamOpcode;
+import uk.ac.nott.cs.comp3012.coursework.backend.tam.TamPrimitive;
 import uk.ac.nott.cs.comp3012.coursework.backend.tam.TamRegister;
-import uk.ac.nott.cs.comp3012.coursework.backend.tam.TamInstruction.Instruction;
 
 
 public class StmtEmitter {
@@ -48,7 +48,7 @@ public class StmtEmitter {
                 throw new IllegalStateException("Read expects variable");
 
             int addr = globals.requireGlobal(v.name());
-            emitter.emit(TamOpcode.CALL, TamRegister.PB, 0, 25); // GETINT
+            emitter.emit(TamOpcode.CALL, TamRegister.PB, 0, TamPrimitive.GETINT.disp);
             emitter.emit(TamOpcode.LOADL, TamRegister.CB, 1, addr);
         }
     }
@@ -56,37 +56,25 @@ public class StmtEmitter {
     private void emitWrite(Write w) {
         for (Expr e : w.exprs()) {
             exprEmitter.emitExpr(e);
-            emitter.emit(TamOpcode.CALL, TamRegister.PB, 1, 26); // PUTINT
+            emitter.emit(TamOpcode.CALL, TamRegister.PB, 1, TamPrimitive.PUTINT.disp);
         }
     }
 
     private void emitIf(If i) {
         exprEmitter.emitExpr(i.condition());
-        int jmp = jumps.reserveJump(TamOpcode.JUMPIF);
+        int jumpOverThen = jumps.createForwardJump(TamOpcode.JUMPIF);
         emitStmt(i.thenStmt());
-        jumps.patchJump(jmp, emitter.size(), TamOpcode.JUMPIF);
+        jumps.patchForwardJump(jumpOverThen);
     }
 
     private void emitIfElse(IfElse ie) {
         exprEmitter.emitExpr(ie.condition());
-        int jumpOverThen = reserveJumpIfFalse();
+        int jumpOverThen = jumps.createForwardJump(TamOpcode.JUMPIF);
         emitThenBlock(ie);
-        int jumpOverElse = reserveUnconditionalJump();
-        patchJumpIfFalse(jumpOverThen);
+        int jumpOverElse = jumps.createForwardJump(TamOpcode.JUMP);
+        jumps.patchForwardJump(jumpOverThen);
         emitElseBlock(ie);
-        patchUnconditionalJump(jumpOverElse);
-    }
-
-    private int reserveJumpIfFalse() {
-        int pos = emitter.size();
-        emitter.emit(TamOpcode.JUMPIF, TamRegister.CB, 0, 0);
-        return pos;
-    }
-
-    private int reserveUnconditionalJump() {
-        int pos = emitter.size();
-        emitter.emit(TamOpcode.JUMP, TamRegister.CB, 0, 0);
-        return pos;
+        jumps.patchForwardJump(jumpOverElse);
     }
 
     private void emitThenBlock(IfElse ie) {
@@ -99,14 +87,6 @@ public class StmtEmitter {
         for (Stmt s : ie.elseBlock()) {
             emitStmt(s);
         }
-    }
-
-    private void patchJumpIfFalse(int jumpIndex) {
-        jumps.patchJump(jumpIndex, emitter.size(), TamOpcode.JUMPIF);
-    }
-
-    private void patchUnconditionalJump(int jumpIndex) {
-        jumps.patchJump(jumpIndex, emitter.size(), TamOpcode.JUMP);
     }
 
 

@@ -41,17 +41,4 @@ public class InstructionEmitter {
         return code.size();
     }
 
-    /**
-     * Prints the full instruction list (after all patching).
-     * */
-    public void dumpFinalCode() {
-        System.out.println("---- Final instruction list ----");
-        InstructionList list = code;
-        for (int i = 0; i < list.size(); i++) {
-            Instruction ins = list.get(i);
-            System.out.printf("%04d: %s %s n=%d d=%d%n", i, ins.op(), ins.r(), ins.n(), ins.d());
-        }
-        System.out.println("---- end ----");
-    }
-
 }

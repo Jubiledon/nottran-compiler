@@ -17,12 +17,28 @@ decl
     ;
 
 type
+    : baseType dims?     // optional array dimensions
+    ;
+
+baseType
     : INTEGER
+    | REAL
+    | CHARACTER
     | LOGICAL
     ;
 
+// dims: a parenthesised list of integers or expressions
+dims
+    : LPAREN dimensionList RPAREN
+    ;
+
+// list of dimensions (expressions allowed)
+dimensionList
+    : expr (COMMA expr)*
+    ;
+
 idList
-    : ID (',' ID)*
+    : ID (COMMA ID)*
     ;
 
 block
@@ -38,6 +54,7 @@ stmt
 
 assignStmt
     : ID ASSIGN expr
+    | designator ASSIGN expr
     ;
 
 readStmt
@@ -89,6 +106,19 @@ primary
     | LPAREN expr RPAREN
     ;
 
+// ----------------------
+// Class II-2
+// ----------------------
+
+designator
+    : simpleDesignator ( PERCENT ID ( LPAREN exprList? RPAREN )? )*
+    ;
+
+// a simpleDesignator is either a bare name or an array indexing
+simpleDesignator
+    : ID ( '(' exprList? ')' )?
+    ;
+
 // =============================================================================
 // SCANNER RULES
 // =============================================================================
@@ -129,3 +159,6 @@ INTLIT  : [0-9]+;
 ID      : [A-Za-z_][A-Za-z_0-9]*;
 
 WS      : [ \t\r\n]+ -> skip;
+PERCENT : '%' ;
+REAL      : 'real';
+CHARACTER : 'character';

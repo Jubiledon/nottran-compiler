@@ -12,26 +12,33 @@ public class JumpUtils {
         this.emitter = emitter;
     }
 
-    public int reserveJump(TamOpcode op) {
+    /**
+     * Creates a placeholder forward jump instruction using the given opcode.
+     * It will later be patched to jump to the current end of code.
+     */
+    public int createForwardJump(TamOpcode opcode) {
         int index = emitter.size();
-        emitter.emit(op, TamRegister.CB, 0, 0);
+        emitter.emit(opcode, TamRegister.CB, 0, 0);
         return index;
     }
 
-    public void patchJump(int jumpIndex, int targetIndex, TamOpcode op) {
+    /**
+     * Patches a previously created forward jump so that it jumps
+     * to the current end of the instruction stream.
+     */
+    public void patchForwardJump(int jumpIndex) {
         Instruction old = emitter.get(jumpIndex);
-        int displacement = computeInstructionWordsToSkip(jumpIndex + 1, targetIndex);
-        // debug: show what we're about to patch
-        System.out.printf("Patching %s at idx=%d -> targetIdx=%d displacement=%d (from=%d to=%d)%n",
-                op, jumpIndex, targetIndex, displacement, jumpIndex + 1, targetIndex);
-        emitter.set(jumpIndex, new Instruction(op, old.r(), old.n(), displacement));
-    }
-
-    public int computeInstructionWordsToSkip(int from, int to) {
-        return to - from;
-    }
-
-    public int computeInstructionByteOffset(int index) {
-        return index;
+        int targetIndex = emitter.size();
+        int displacement = targetIndex - (jumpIndex + 1);
+        System.out.printf(
+                "Patching %s at idx=%d -> targetIdx=%d displacement=%d (from=%d to=%d)%n",
+                old.op(),            // opcode from the original jump
+                jumpIndex,           // index of the jump instruction
+                targetIndex,         // where it will jump to
+                displacement,        // computed displacement
+                jumpIndex + 1,       // first instruction after the jump
+                targetIndex          // same as target
+        );        emitter.set(jumpIndex,
+        new Instruction(old.op(), old.r(), old.n(), targetIndex));
     }
 }

@@ -3,7 +3,6 @@ package uk.ac.nott.cs.comp3012.coursework.semantic;
 import uk.ac.nott.cs.comp3012.coursework.ast.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -155,7 +154,7 @@ public class SemanticAnalyser {
             Type right = checkExpr(rop.right());
             if (left != Type.INT || right != Type.INT) {
                 if (left != Type.UNKNOWN && right != Type.UNKNOWN)
-                    result.addError("Relational operator '" + rop.op() + "' requires INTEGER operands (got " + left + " and " + right + ")");
+                    result.addError("Relational operator '" + rop.opSymbol() + "' requires INTEGER operands (got " + left + " and " + right + ")");
                 return Type.UNKNOWN;
             }
             return Type.BOOL;

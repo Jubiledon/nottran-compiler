@@ -20,18 +20,6 @@ public interface TamInstruction {
             return new byte[]{(byte) ((op.value << 4) | r.value), (byte) n,
                     (byte) ((d & 0xff00) >>> 8), (byte) (d & 0xff),};
         }
-
-        @Override
-        public String toString() {
-            return switch (op) {
-                case LOADL -> String.format("LOADL %d", d);
-                case CALL  -> String.format("CALL %s[%d]", r, d);
-                case JUMPIF -> String.format("JUMPIF %d", d);
-                case JUMP -> String.format("JUMP %d", d);
-                case HALT -> "HALT";
-                default -> String.format("%s %d[%s] (n=%d)", op, d, r, n);
-            };
-        }
     }
 
     final class InstructionList extends ArrayList<Instruction> implements TamInstruction {
@@ -52,16 +40,6 @@ public interface TamInstruction {
             }
             return out.toByteArray();
         }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            for (Instruction instr : this) {
-                sb.append(instr.toString()).append("\n");
-            }
-            return sb.toString();
-        }
-
     }
 
 }
