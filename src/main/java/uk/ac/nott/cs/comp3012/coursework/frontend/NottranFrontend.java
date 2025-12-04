@@ -6,6 +6,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import uk.ac.nott.cs.comp3012.coursework.NottscriptLexer;
 import uk.ac.nott.cs.comp3012.coursework.NottscriptParser;
 import uk.ac.nott.cs.comp3012.coursework.ast.Ast;
+import uk.ac.nott.cs.comp3012.coursework.ast.AstPrinter;
+import uk.ac.nott.cs.comp3012.coursework.ast.Program;
+import uk.ac.nott.cs.comp3012.coursework.semantic.SemanticAnalyser;
 
 import javax.swing.*;
 import java.util.Arrays;
@@ -17,13 +20,36 @@ public class NottranFrontend implements Frontend{
         NottscriptLexer lexer = new NottscriptLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         NottscriptParser parser = new NottscriptParser(tokens);
-
         ParseTree tree = parser.program();
-        renderParseTree(tree, parser);
+
+//        renderParseTree(tree, parser);
 
         // TODO: Write your AST builder visitor
         AstBuilder builder = new AstBuilder();
-        return builder.visit(tree);
+        Ast ast = builder.visit(tree);
+
+        // print ast
+        AstPrinter printer = new AstPrinter();
+        printer.print(ast);
+
+        // run semantic analysis
+        if (ast instanceof Program p) {
+            var analyzer = new SemanticAnalyser();
+            var res = analyzer.analyse(p);
+            if (res.hasErrors()) {
+                res.printErrors();
+                // choose whether to stop compilation or continue:
+                // - For development: print errors and exit (recommended)
+                // - For tolerant mode: continue but be careful
+                throw new RuntimeException("Semantic errors detected; aborting compilation");
+            } else {
+                System.out.println("Semantic analysis: no errors");
+            }
+        } else {
+            throw new RuntimeException("Frontend did not produce Program node");
+        }
+
+        return ast;
     }
 
     /**
