@@ -4,161 +4,96 @@ grammar Nottscript;
 // GRAMMARS
 // =============================================================================
 
-program
-    : PROGRAM ID decls block END PROGRAM ID
-    ;
+// Program definition
+program : PROGRAM ID decls block END PROGRAM ID ;
 
-decls
-    : ( decl )*
-    ;
+// Declarations
+decls : decl* ;
 
-decl
-    : type '::' idList
-    ;
+decl  : type '::' idList ;
 
-type
-    : baseType dims?     // optional array dimensions
-    ;
+type  : INTEGER | LOGICAL ;
 
-baseType
-    : INTEGER
-    | REAL
-    | CHARACTER
-    | LOGICAL
-    ;
+idList : ID (',' ID)* ;
 
-// dims: a parenthesised list of integers or expressions
-dims
-    : LPAREN dimensionList RPAREN
-    ;
+// Block structure
+block : stmt* ;
 
-// list of dimensions (expressions allowed)
-dimensionList
-    : expr (COMMA expr)*
-    ;
+// Statements
+stmt : assignStmt | readStmt | writeStmt | ifStmt ;
 
-idList
-    : ID (COMMA ID)*
-    ;
+// Assignment statement
+assignStmt : ID ASSIGN expr ;
 
-block
-    : stmt*
-    ;
+// Read statement
+readStmt : READ exprList ;
 
-stmt
-    : assignStmt
-    | readStmt
-    | writeStmt
-    | ifStmt
-    ;
+// Write statement
+writeStmt : WRITE exprList ;
 
-assignStmt
-    : ID ASSIGN expr
-    | designator ASSIGN expr
-    ;
+// Expression list for Read and Write
+exprList : expr (',' expr)* ;
 
-readStmt
-    : READ exprList
-    ;
+// =============================================================================
+// IF Statements
+// =============================================================================
 
-writeStmt
-    : WRITE exprList
-    ;
+// Simple If statement
+ifStmt : IF LPAREN expr RPAREN stmt # simpleIf
 
-exprList
-    : expr (',' expr)*
-    ;
+        // Full If statement with THEN and ELSE
+      | IF LPAREN expr RPAREN THEN block ELSE block ENDIF # fullIf ;
 
-// ----------------------
-// IF statements
-// ----------------------
-
-ifStmt
-    : IF LPAREN expr RPAREN stmt                        # simpleIf
-    | IF LPAREN expr RPAREN THEN block ELSE block ENDIF # fullIf
-    ;
-
-// ----------------------
+// =============================================================================
 // Expressions
-// ----------------------
+// =============================================================================
 
-expr
-    : relExpr
-    ;
+// Relational expressions
+expr : relExpr ;
 
-relExpr
-    : addExpr (relOp addExpr)?
-    ;
+relExpr : addExpr (relOp addExpr)? ;
 
-relOp
-    : LT | LE | GT | GE | EQ | NEQ
-    ;
+relOp : LT | LE | GT | GE | EQ | NEQ ;
 
-addExpr
-    : primary
-    ;
+addExpr : primary ;
 
-primary
-    : INTLIT
-    | TRUE
-    | FALSE
-    | ID
-    | LPAREN expr RPAREN
-    ;
-
-// ----------------------
-// Class II-2
-// ----------------------
-
-designator
-    : simpleDesignator ( PERCENT ID ( LPAREN exprList? RPAREN )? )*
-    ;
-
-// a simpleDesignator is either a bare name or an array indexing
-simpleDesignator
-    : ID ( '(' exprList? ')' )?
-    ;
+primary : INTLIT | TRUE | FALSE | ID | LPAREN expr RPAREN ;
 
 // =============================================================================
 // SCANNER RULES
 // =============================================================================
 
-// -----------
-// Class III
-// -----------
+// Reserved keywords
+PROGRAM  : 'program' ;
+END      : 'end' ;
+INTEGER  : 'integer' ;
+LOGICAL  : 'logical' ;
+READ     : 'read' ;
+WRITE    : 'write' ;
+IF       : 'if' ;
+THEN     : 'then' ;
+ELSE     : 'else' ;
+ENDIF    : 'end if' ;
+TRUE     : '.true.' ;
+FALSE    : '.false.' ;
 
-PROGRAM : 'program';
-END     : 'end';
-INTEGER : 'integer';
-LOGICAL : 'logical';
-READ    : 'read';
-WRITE   : 'write';
-IF      : 'if';
-THEN    : 'then';
-ELSE    : 'else';
-ENDIF   : 'end if';
+// Relational operators
+LT  : '<' | '.lt.' ;
+LE  : '<=' | '.le.' ;
+GT  : '>' | '.gt.' ;
+GE  : '>=' | '.ge.' ;
+EQ  : '==' | '.eq.' ;
+NEQ : '/=' | '.neq.' ;
 
-TRUE    : '.true.';
-FALSE   : '.false.';
+// Other symbols
+ASSIGN : '=' ;
+LPAREN : '(' ;
+RPAREN : ')' ;
+COMMA  : ',' ;
 
-// Relational Operators
-LT      : '<' | '.lt.';
-LE      : '<=' | '.le.';
-GT      : '>' | '.gt.';
-GE      : '>=' | '.ge.';
-EQ      : '==' | '.eq.';
-NEQ     : '/=' | '.neq.';
+// Literals
+INTLIT : [0-9]+ ;
+ID     : [A-Za-z_][A-Za-z_0-9]* ;
 
-ASSIGN  : '=';
-
-LPAREN  : '(';
-RPAREN  : ')';
-COMMA   : ',';
-
-INTLIT  : [0-9]+;
-ID      : [A-Za-z_][A-Za-z_0-9]*;
-
-WS      : [ \t\r\n]+ -> skip;
-PERCENT : '%' ;
-REAL      : 'real';
-CHARACTER : 'character';
+// Whitespace (skip it)
+WS : [ \t\r\n]+ -> skip ;
